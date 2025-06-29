@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/zitadel/oidc/v3/example/server/config"
-	"github.com/zitadel/oidc/v3/example/server/exampleop"
-	"github.com/zitadel/oidc/v3/example/server/storage"
+	"github.com/AlexeyKupershtokh/telegram-oidc-server/config"
+	"github.com/AlexeyKupershtokh/telegram-oidc-server/exampleop"
+	"github.com/AlexeyKupershtokh/telegram-oidc-server/storage"
 )
 
 func getUserStore(cfg *config.Config) (storage.UserStore, error) {
