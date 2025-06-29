@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -20,7 +21,10 @@ func getUserStore(cfg *config.Config) (storage.UserStore, error) {
 }
 
 func main() {
-	cfg := config.FromEnvVars(&config.Config{Port: "9991"})
+	cfg, err := config.Parse()
+	if err != nil {
+		log.Fatal(err)
+	}
 	logger := slog.New(
 		slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 			AddSource: true,
@@ -28,8 +32,7 @@ func main() {
 		}),
 	)
 
-	//which gives us the issuer: http://localhost:9998/
-	issuer := fmt.Sprintf("http://localhost:%s/", cfg.Port)
+	issuer := cfg.Issuer
 
 	storage.RegisterClients(
 		storage.NativeClient("native", cfg.RedirectURI...),
@@ -40,7 +43,7 @@ func main() {
 	// the OpenIDProvider interface needs a Storage interface handling various checks and state manipulations
 	// this might be the layer for accessing your database
 	// in this example it will be handled in-memory
-	store, err := getUserStore(cfg)
+	store, err := getUserStore(&cfg)
 	if err != nil {
 		logger.Error("cannot create UserStore", "error", err)
 		os.Exit(1)
