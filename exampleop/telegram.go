@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/zitadel/oidc/v3/pkg/op"
@@ -29,7 +30,7 @@ func NewTelegramLogin(authenticate authenticate, callback func(context.Context, 
 func (l *telegramLogin) createRouter(issuerInterceptor *op.IssuerInterceptor) {
 	l.router = chi.NewRouter()
 	l.router.Get("/", l.loginHandler)
-	l.router.Post("/", issuerInterceptor.HandlerFunc(l.checkLoginHandler))
+	l.router.Get("/check", l.checkLoginHandler)
 }
 
 type telegramAuthenticate interface {
@@ -62,16 +63,27 @@ func renderTelegramLogin(w http.ResponseWriter, id string, err error) {
 }
 
 func (l *telegramLogin) checkLoginHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("id")
+	id := r.FormValue("flow_id")
 
 	t := telegram.DefaultVerifier{}
 	userData, err := t.ParseData(r.URL.Query())
 	if err != nil {
-		http.Error(w, fmt.Sprintf("cannot parse form:%s", err), http.StatusBadRequest)
+		redirectBackToTelegramLogin(w, r, err.Error())
 		return
 	}
 
 	fmt.Printf("id: %s, userData: %v\n", id, userData)
 
 	http.Redirect(w, r, l.callback(r.Context(), id), http.StatusFound)
+}
+
+func redirectBackToTelegramLogin(w http.ResponseWriter, r *http.Request, prompt string) {
+	values := make(url.Values)
+	values.Set("prompt", url.QueryEscape(prompt))
+
+	url := url.URL{
+		Path:     "/telegram",
+		RawQuery: values.Encode(),
+	}
+	http.Redirect(w, r, url.String(), http.StatusSeeOther)
 }
