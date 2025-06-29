@@ -7,15 +7,18 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	jose "github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4"
 	"github.com/google/uuid"
 
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
+
+	"github.com/AlexeyKupershtokh/telegram-oidc-server/internal/pkg/telegram"
 )
 
 // serviceKey1 is a public key which will be used for the JWT Profile Authorization Grant
@@ -127,6 +130,22 @@ func NewStorageWithClients(userStore UserStore, clients map[string]*Client) *Sto
 			},
 		},
 	}
+}
+
+func (s *Storage) CheckTelegramData(id string, data telegram.UserData) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	request, ok := s.authRequests[id]
+	if !ok {
+		return fmt.Errorf("request not found")
+	}
+
+	request.UserID = strconv.FormatInt(data.ID, 10)
+	request.done = true
+	request.authTime = time.Now()
+
+	return nil
 }
 
 // CheckUsernamePassword implements the `authenticate` interface of the login

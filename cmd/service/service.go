@@ -35,9 +35,10 @@ func main() {
 	issuer := cfg.Issuer
 
 	storage.RegisterClients(
-		storage.NativeClient("native", cfg.RedirectURI...),
-		storage.WebClient("web", "secret", cfg.RedirectURI...),
-		storage.WebClient("api", "secret", cfg.RedirectURI...),
+		//storage.NativeClient("native", cfg.RedirectURI...),
+		//storage.WebClient("web", "secret", cfg.RedirectURI...),
+		storage.WebClient("telegram-oidc", "secret", cfg.RedirectURI...),
+		//storage.WebClient("api", "secret", cfg.RedirectURI...),
 	)
 
 	// the OpenIDProvider interface needs a Storage interface handling various checks and state manipulations

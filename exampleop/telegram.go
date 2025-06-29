@@ -12,16 +12,20 @@ import (
 	"github.com/AlexeyKupershtokh/telegram-oidc-server/internal/pkg/telegram"
 )
 
-type telegramLogin struct {
-	authenticate authenticate
-	router       chi.Router
-	callback     func(context.Context, string) string
+type tgAuthenticate interface {
+	CheckTelegramData(id string, data telegram.UserData) error
 }
 
-func NewTelegramLogin(authenticate authenticate, callback func(context.Context, string) string, issuerInterceptor *op.IssuerInterceptor) *telegramLogin {
+type telegramLogin struct {
+	tgAuthenticate tgAuthenticate
+	router         chi.Router
+	callback       func(context.Context, string) string
+}
+
+func NewTelegramLogin(tgAuthenticate tgAuthenticate, callback func(context.Context, string) string, issuerInterceptor *op.IssuerInterceptor) *telegramLogin {
 	l := &telegramLogin{
-		authenticate: authenticate,
-		callback:     callback,
+		tgAuthenticate: tgAuthenticate,
+		callback:       callback,
 	}
 	l.createRouter(issuerInterceptor)
 	return l
@@ -31,10 +35,6 @@ func (l *telegramLogin) createRouter(issuerInterceptor *op.IssuerInterceptor) {
 	l.router = chi.NewRouter()
 	l.router.Get("/", l.loginHandler)
 	l.router.Get("/check", l.checkLoginHandler)
-}
-
-type telegramAuthenticate interface {
-	CheckUsernamePassword(username, password, id string) error
 }
 
 func (l *telegramLogin) loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +73,12 @@ func (l *telegramLogin) checkLoginHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	fmt.Printf("id: %s, userData: %v\n", id, userData)
+
+	err = l.tgAuthenticate.CheckTelegramData(id, userData)
+	if err != nil {
+		redirectBackToTelegramLogin(w, r, err.Error())
+		return
+	}
 
 	http.Redirect(w, r, l.callback(r.Context(), id), http.StatusFound)
 }
