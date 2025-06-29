@@ -69,6 +69,9 @@ func SetupServer(issuer string, storage Storage, logger *slog.Logger, wrapServer
 		registerDeviceAuth(storage, r)
 	})
 
+	t := NewTelegramLogin(storage, op.AuthCallbackURL(provider), op.NewIssuerInterceptor(provider.IssuerFromRequest))
+	router.Mount("/telegram", http.StripPrefix("/telegram", t.router))
+
 	handler := http.Handler(provider)
 	if wrapServer {
 		handler = op.RegisterLegacyServer(op.NewLegacyServer(provider, *op.DefaultEndpoints), op.AuthorizeCallbackHandler(provider))

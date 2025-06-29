@@ -1,0 +1,19 @@
+{{ define "telegram_login" -}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Login</title>
+    </head>
+    <body style="display: flex; align-items: center; justify-content: center; height: 100vh;">
+        <script
+                async
+                src="https://telegram.org/js/telegram-widget.js?22"
+                data-telegram-login="my_test_bot"
+                data-size="large"
+                data-auth-url="?id={{.ID}}"
+                data-request-access="write"
+        ></script>
+    </body>
+</html>
+{{- end }}
