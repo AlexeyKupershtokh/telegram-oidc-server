@@ -23,6 +23,7 @@ type Storage interface {
 	op.Storage
 	authenticate
 	deviceAuthenticate
+	tgAuthenticate
 }
 
 // simple counter for request IDs
