@@ -21,9 +21,12 @@ const (
 
 type Storage interface {
 	op.Storage
-	authenticate
-	deviceAuthenticate
 	tgAuthenticate
+
+	// TODO: remove
+	authenticate
+	//TODO: remove
+	deviceAuthenticate
 }
 
 // simple counter for request IDs
